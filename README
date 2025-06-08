@@ -1,0 +1,22 @@
+# 🤖 Bot de Figurinhas WhatsApp com Baileys
+
+Este é um bot de WhatsApp usando a biblioteca Baileys. Ele transforma imagens e vídeos curtos enviados no WhatsApp em figurinhas (stickers).
+
+## Funcionalidades
+
+- Cria figurinhas a partir de imagens.
+- Cria figurinhas animadas a partir de vídeos curtos (até 10 segundos).
+- Responde automaticamente quando recebe mídia.
+
+## Requisitos
+
+- Node.js 18 ou superior
+- ffmpeg instalado na máquina
+- Conta de WhatsApp para conexão
+
+## Instalação
+
+```bash
+git clone https://github.com/seu-usuario/bot-figurinhas.git
+cd bot-figurinhas
+npm install
