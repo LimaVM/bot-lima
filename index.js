@@ -9,6 +9,9 @@ import { Sticker, StickerTypes } from 'wa-sticker-formatter';
 
 const store = makeInMemoryStore({ logger: Pino().child({ level: 'silent', stream: 'store' }) });
 
+const PREFIX = '/';
+const STICKER_CMD = 'fig';
+
 async function start() {
   const { state, saveCreds } = await useMultiFileAuthState('auth');
   const { version } = await fetchLatestBaileysVersion();
@@ -25,14 +28,41 @@ async function start() {
 
   sock.ev.on('messages.upsert', async ({ messages }) => {
     const msg = messages[0];
-    if (!msg.message) return;
-    if (msg.key.fromMe) return;
-    const hasImage = !!msg.message.imageMessage;
-    const hasVideo = !!msg.message.videoMessage;
-    if (!hasImage && !hasVideo) return;
+    if (!msg.message || msg.key.fromMe) return;
+
+    const text = (msg.message.conversation ||
+      msg.message.extendedTextMessage?.text ||
+      msg.message.imageMessage?.caption ||
+      msg.message.videoMessage?.caption ||
+      '').trim();
+
+    if (!text.startsWith(PREFIX + STICKER_CMD)) return;
+
+    let target = msg;
+    let hasImage = !!msg.message.imageMessage;
+    let hasVideo = !!msg.message.videoMessage;
+
+    if (!hasImage && !hasVideo) {
+      const quoted = msg.message.extendedTextMessage?.contextInfo?.quotedMessage;
+      if (quoted?.imageMessage || quoted?.videoMessage) {
+        const ctx = msg.message.extendedTextMessage.contextInfo;
+        target = {
+          key: {
+            remoteJid: msg.key.remoteJid,
+            id: ctx.stanzaId,
+            fromMe: false
+          },
+          message: quoted
+        };
+        hasImage = !!quoted.imageMessage;
+        hasVideo = !!quoted.videoMessage;
+      } else {
+        return;
+      }
+    }
 
     try {
-      const buffer = await downloadMediaMessage(msg, 'buffer', {}, { logger: sock.logger });
+      const buffer = await downloadMediaMessage(target, 'buffer', {}, { logger: sock.logger });
       const sticker = new Sticker(buffer, {
         pack: 'Bot',
         author: 'Baileys',
@@ -40,7 +70,7 @@ async function start() {
       });
       await sock.sendMessage(msg.key.remoteJid, await sticker.toMessage(), { quoted: msg });
     } catch (err) {
-      console.error('Erro ao processar midia:', err);
+      console.error('Erro ao criar figurinha:', err);
     }
   });
 }

@@ -4,9 +4,8 @@ Este repositório contém um pequeno bot de WhatsApp que converte imagens e víd
 
 ## Funcionalidades
 
-- Cria figurinhas a partir de imagens enviadas.
-- Cria figurinhas animadas a partir de vídeos de até 10 segundos.
-- Responde automaticamente quando recebe mídia.
+- Converte imagens em figurinhas enviando-as com a legenda `/fig`.
+- Converte vídeos curtos (até 10 segundos) em figurinhas animadas com o mesmo comando.
 
 ## Requisitos
 
@@ -30,4 +29,4 @@ Inicie o bot executando:
 npm start
 ```
 
-Um QR Code será exibido no terminal. Escaneie com o WhatsApp para efetuar a conexão. A partir disso qualquer imagem ou vídeo curto enviado para o bot será convertido em figurinha.
+Um QR Code será exibido no terminal. Escaneie com o WhatsApp para efetuar a conexão. Envie uma imagem ou vídeo com a legenda `/fig` ou responda `/fig` a uma mídia para receber a figurinha.
