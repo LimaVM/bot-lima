@@ -76,8 +76,8 @@ async function start() {
     try {
       const buffer = await downloadMediaMessage(target, 'buffer', {}, { logger: sock.logger });
       const sticker = new Sticker(buffer, {
-        pack: 'Bot',
-        author: 'Baileys',
+        pack: 'devlima',
+        author: 'by devlima',
         type: hasVideo ? StickerTypes.CROPPED : StickerTypes.FULL
       });
       await sock.sendMessage(msg.key.remoteJid, await sticker.toMessage(), { quoted: msg });
