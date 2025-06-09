@@ -10,26 +10,20 @@ import qrcode from 'qrcode-terminal';
 import Pino from 'pino';
 import { Sticker, StickerTypes } from 'wa-sticker-formatter';
 import Jimp from 'jimp';
-import ytSearch from 'yt-search';
-import ytdl from 'ytdl-core';
+import { execFile } from 'child_process';
 import fs from 'fs';
+import os from 'os';
+import si from 'systeminformation';
+import util from 'util';
 
 
 const PREFIX = '/';
 const STICKER_CMD = 'fig';
 const STICKER_FULL_CMD = 'figfull';
 const YT_CMD = 'yt';
+const MENU_CMD = 'menu';
 
 let connectedAt = 0;
-
-function streamToBuffer(stream) {
-  return new Promise((resolve, reject) => {
-    const chunks = [];
-    stream.on('data', chunk => chunks.push(chunk));
-    stream.on('end', () => resolve(Buffer.concat(chunks)));
-    stream.on('error', err => reject(err));
-  });
-}
 
 async function start() {
   const { state, saveCreds } = await useMultiFileAuthState('auth');
@@ -113,54 +107,35 @@ async function start() {
       }
     } else if (command === YT_CMD && args) {
       try {
-        let url = args;
-        let info;
-        if (!/youtu\.be|youtube\.com/.test(args)) {
-          const search = await ytSearch(args);
-          if (!search.videos.length) {
-            await sock.sendMessage(msg.key.remoteJid, { text: 'Nenhum resultado encontrado.' }, { quoted: msg });
-            return;
-          }
-          url = search.videos[0].url;
-          info = { videoDetails: { title: search.videos[0].title } };
-        } else {
-          info = await ytdl.getInfo(url);
-        }
-
-        const title = info.videoDetails.title;
-        await sock.sendMessage(msg.key.remoteJid, { text: `Baixando: ${title}` }, { quoted: msg });
-
-      let audioBuffer;
-      try {
-        const stream = ytdl(url, { filter: 'audioonly', quality: 'highestaudio' });
-        audioBuffer = await streamToBuffer(stream);
-      } catch (downloadErr) {
-        if (downloadErr.statusCode === 410) {
-          const refreshInfo = await ytdl.getInfo(url);
-          const retryStream = ytdl.downloadFromInfo(refreshInfo, {
-            filter: 'audioonly',
-            quality: 'highestaudio'
-          });
-          audioBuffer = await streamToBuffer(retryStream);
-        } else {
-          throw downloadErr;
-        }
+        const { stdout } = await util.promisify(execFile)('python3', ['yt_downloader.py', args]);
+        const result = JSON.parse(stdout.trim());
+        if (result.error) throw new Error(result.error);
+        await sock.sendMessage(msg.key.remoteJid, { text: `Baixando: ${result.title}` }, { quoted: msg });
+        const audioBuffer = fs.readFileSync(result.path);
+        await sock.sendMessage(msg.key.remoteJid, { audio: audioBuffer, mimetype: 'audio/mpeg' }, { quoted: msg });
+        fs.unlinkSync(result.path);
+      } catch (err) {
+        console.error('Erro ao baixar audio:', err);
+        const log = `Erro ao baixar audio:\n${err.stack}`;
+        const logPath = 'yt_error.log';
+        fs.writeFileSync(logPath, log);
+        await sock.sendMessage(msg.key.remoteJid, { text: `Deu um problema: ${err.message}` }, { quoted: msg });
+        await sock.sendMessage(
+          msg.key.remoteJid,
+          { document: fs.readFileSync(logPath), fileName: 'yt_error.log', mimetype: 'text/plain' },
+          { quoted: msg }
+        );
+        fs.unlinkSync(logPath);
       }
-      await sock.sendMessage(msg.key.remoteJid, { audio: audioBuffer, mimetype: 'audio/mpeg' }, { quoted: msg });
-    } catch (err) {
-      console.error('Erro ao baixar audio:', err);
-      const log = `Erro ao baixar audio:\n${err.stack}`;
-      const logPath = 'yt_error.log';
-      fs.writeFileSync(logPath, log);
-      await sock.sendMessage(msg.key.remoteJid, { text: `Deu um problema: ${err.message}` }, { quoted: msg });
-      await sock.sendMessage(
-        msg.key.remoteJid,
-        { document: fs.readFileSync(logPath), fileName: 'yt_error.log', mimetype: 'text/plain' },
-        { quoted: msg }
-      );
-      fs.unlinkSync(logPath);
+    } else if (command === MENU_CMD) {
+      const now = new Date().toLocaleString('pt-BR');
+      const cpu = os.cpus()[0].model.trim();
+      const total = (os.totalmem() / 1024 / 1024 / 1024).toFixed(2);
+      const free = (os.freemem() / 1024 / 1024 / 1024).toFixed(2);
+      const board = await si.baseboard();
+      const textMsg = `Hora: ${now}\nCPU: ${cpu}\nRAM livre/total: ${free}/${total} GB\nPlaca-mae: ${board.manufacturer} ${board.model}`;
+      await sock.sendMessage(msg.key.remoteJid, { text: textMsg }, { quoted: msg });
     }
-  }
 });
 }
 
