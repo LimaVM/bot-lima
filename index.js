@@ -5,6 +5,7 @@ const {
   fetchLatestBaileysVersion,
   downloadMediaMessage
 } = baileys;
+import qrcode from 'qrcode-terminal';
 import Pino from 'pino';
 import { Sticker, StickerTypes } from 'wa-sticker-formatter';
 
@@ -19,8 +20,13 @@ async function start() {
   const sock = makeWASocket({
     version,
     logger: Pino({ level: 'silent' }),
-    printQRInTerminal: true,
     auth: state
+  });
+
+  sock.ev.on('connection.update', ({ qr }) => {
+    if (qr) {
+      qrcode.generate(qr, { small: true });
+    }
   });
 
   sock.ev.on('creds.update', saveCreds);
