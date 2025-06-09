@@ -9,7 +9,7 @@ const {
 import qrcode from 'qrcode-terminal';
 import Pino from 'pino';
 import { Sticker, StickerTypes } from 'wa-sticker-formatter';
-import { Jimp } from 'jimp';
+import Jimp from 'jimp';
 import ytSearch from 'yt-search';
 import ytdl from 'ytdl-core';
 
