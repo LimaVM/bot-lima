@@ -2,8 +2,9 @@ import baileys from '@whiskeysockets/baileys';
 const {
   makeWASocket,
   useMultiFileAuthState,
-  fetchLatestBaileysVersion,
-  downloadMediaMessage
+  downloadMediaMessage,
+  DisconnectReason,
+  fetchLatestBaileysVersion
 } = baileys;
 import qrcode from 'qrcode-terminal';
 import Pino from 'pino';
@@ -25,13 +26,19 @@ async function start() {
     auth: state
   });
 
-  sock.ev.on('connection.update', ({ qr, connection }) => {
+  sock.ev.on('connection.update', ({ qr, connection, lastDisconnect }) => {
     if (qr) {
       qrcode.generate(qr, { small: true });
     }
     if (connection === 'open') {
       connectedAt = Date.now();
       console.log('Conectado');
+    } else if (connection === 'close') {
+      const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
+      console.log('Conexao encerrada', shouldReconnect ? 'tentando reconectar...' : 'nao vai reconectar');
+      if (shouldReconnect) {
+        start();
+      }
     }
   });
 
