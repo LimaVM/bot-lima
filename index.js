@@ -130,8 +130,22 @@ async function start() {
         const title = info.videoDetails.title;
         await sock.sendMessage(msg.key.remoteJid, { text: `Baixando: ${title}` }, { quoted: msg });
 
-      const stream = ytdl(url, { filter: 'audioonly', quality: 'highestaudio' });
-      const audioBuffer = await streamToBuffer(stream);
+      let audioBuffer;
+      try {
+        const stream = ytdl(url, { filter: 'audioonly', quality: 'highestaudio' });
+        audioBuffer = await streamToBuffer(stream);
+      } catch (downloadErr) {
+        if (downloadErr.statusCode === 410) {
+          const refreshInfo = await ytdl.getInfo(url);
+          const retryStream = ytdl.downloadFromInfo(refreshInfo, {
+            filter: 'audioonly',
+            quality: 'highestaudio'
+          });
+          audioBuffer = await streamToBuffer(retryStream);
+        } else {
+          throw downloadErr;
+        }
+      }
       await sock.sendMessage(msg.key.remoteJid, { audio: audioBuffer, mimetype: 'audio/mpeg' }, { quoted: msg });
     } catch (err) {
       console.error('Erro ao baixar audio:', err);
