@@ -12,6 +12,7 @@ import { Sticker, StickerTypes } from 'wa-sticker-formatter';
 import Jimp from 'jimp';
 import ytSearch from 'yt-search';
 import ytdl from 'ytdl-core';
+import fs from 'fs';
 
 
 const PREFIX = '/';
@@ -129,15 +130,24 @@ async function start() {
         const title = info.videoDetails.title;
         await sock.sendMessage(msg.key.remoteJid, { text: `Baixando: ${title}` }, { quoted: msg });
 
-        const stream = ytdl(url, { filter: 'audioonly', quality: 'highestaudio' });
-        const audioBuffer = await streamToBuffer(stream);
-        await sock.sendMessage(msg.key.remoteJid, { audio: audioBuffer, mimetype: 'audio/mpeg' }, { quoted: msg });
-      } catch (err) {
-        console.error('Erro ao baixar audio:', err);
-        await sock.sendMessage(msg.key.remoteJid, { text: `Deu um problema: ${err.message}` }, { quoted: msg });
-      }
+      const stream = ytdl(url, { filter: 'audioonly', quality: 'highestaudio' });
+      const audioBuffer = await streamToBuffer(stream);
+      await sock.sendMessage(msg.key.remoteJid, { audio: audioBuffer, mimetype: 'audio/mpeg' }, { quoted: msg });
+    } catch (err) {
+      console.error('Erro ao baixar audio:', err);
+      const log = `Erro ao baixar audio:\n${err.stack}`;
+      const logPath = 'yt_error.log';
+      fs.writeFileSync(logPath, log);
+      await sock.sendMessage(msg.key.remoteJid, { text: `Deu um problema: ${err.message}` }, { quoted: msg });
+      await sock.sendMessage(
+        msg.key.remoteJid,
+        { document: fs.readFileSync(logPath), fileName: 'yt_error.log', mimetype: 'text/plain' },
+        { quoted: msg }
+      );
+      fs.unlinkSync(logPath);
     }
-  });
+  }
+});
 }
 
 start().catch(err => console.error(err));

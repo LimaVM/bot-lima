@@ -38,4 +38,5 @@ Se preferir uma versão quadrada esticada, responda com `/figfull`.
 As figurinhas são geradas com o pacote `devlima` e autor `by devlima` e o bot não envia nenhuma mensagem além da própria figurinha.
 O comando `/yt` envia o áudio do primeiro resultado do YouTube ou do link informado. Antes do envio ele avisa qual vídeo será baixado.
 Se a conexão cair, o bot tenta se reconectar automaticamente.
+Caso ocorra algum erro ao baixar o áudio, o bot também envia o arquivo `yt_error.log` com mais detalhes.
 
