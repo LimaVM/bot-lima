@@ -13,6 +13,8 @@ import { Sticker, StickerTypes } from 'wa-sticker-formatter';
 const PREFIX = '/';
 const STICKER_CMD = 'fig';
 
+let connectedAt = 0;
+
 async function start() {
   const { state, saveCreds } = await useMultiFileAuthState('auth');
   const { version } = await fetchLatestBaileysVersion();
@@ -23,17 +25,23 @@ async function start() {
     auth: state
   });
 
-  sock.ev.on('connection.update', ({ qr }) => {
+  sock.ev.on('connection.update', ({ qr, connection }) => {
     if (qr) {
       qrcode.generate(qr, { small: true });
+    }
+    if (connection === 'open') {
+      connectedAt = Date.now();
+      console.log('Conectado');
     }
   });
 
   sock.ev.on('creds.update', saveCreds);
 
-  sock.ev.on('messages.upsert', async ({ messages }) => {
+  sock.ev.on('messages.upsert', async ({ messages, type }) => {
+    if (type !== 'notify') return;
     const msg = messages[0];
     if (!msg.message || msg.key.fromMe) return;
+    if (connectedAt && msg.messageTimestamp * 1000 < connectedAt) return;
 
     const text = (msg.message.conversation ||
       msg.message.extendedTextMessage?.text ||

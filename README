@@ -29,4 +29,5 @@ Inicie o bot executando:
 npm start
 ```
 
-Um QR Code será exibido no terminal. Escaneie com o WhatsApp para efetuar a conexão. Envie uma imagem ou vídeo com a legenda `/fig` ou responda `/fig` a uma mídia para receber a figurinha.
+Um QR Code será exibido no terminal. Escaneie com o WhatsApp para efetuar a conexão.
+O bot processa apenas as mensagens novas, inclusive em grupos. Envie uma imagem ou vídeo com a legenda `/fig` ou responda `/fig` a uma mídia para receber a figurinha.
