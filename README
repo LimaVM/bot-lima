@@ -6,6 +6,7 @@ Este repositório contém um pequeno bot de WhatsApp que converte imagens e víd
 
 - Converte imagens em figurinhas respondendo com `/fig` à mensagem que contém a mídia.
 - Converte vídeos curtos (até 10 segundos) em figurinhas animadas da mesma forma.
+- Baixa o áudio de vídeos do YouTube usando o comando `/yt`.
 
 ## Requisitos
 
@@ -32,5 +33,6 @@ npm start
 Um QR Code será exibido no terminal. Escaneie com o WhatsApp para efetuar a conexão.
 O bot processa apenas mensagens novas, inclusive em grupos. Para criar a figurinha, envie `/fig` respondendo à mensagem que contém a imagem ou o vídeo desejado.
 As figurinhas são geradas com o pacote `devlima` e autor `by devlima` e o bot não envia nenhuma mensagem além da própria figurinha.
+O comando `/yt` envia o áudio do primeiro resultado do YouTube ou do link informado. Antes do envio ele avisa qual vídeo será baixado.
 Se a conexão cair, o bot tenta se reconectar automaticamente.
 
