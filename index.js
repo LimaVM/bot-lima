@@ -9,12 +9,14 @@ const {
 import qrcode from 'qrcode-terminal';
 import Pino from 'pino';
 import { Sticker, StickerTypes } from 'wa-sticker-formatter';
+import { Jimp } from 'jimp';
 import ytSearch from 'yt-search';
 import ytdl from 'ytdl-core';
 
 
 const PREFIX = '/';
 const STICKER_CMD = 'fig';
+const STICKER_FULL_CMD = 'figfull';
 const YT_CMD = 'yt';
 
 let connectedAt = 0;
@@ -73,7 +75,7 @@ async function start() {
     const ctx = msg.message.extendedTextMessage?.contextInfo;
     const quoted = ctx?.quotedMessage;
 
-    if (command === STICKER_CMD) {
+    if (command === STICKER_CMD || command === STICKER_FULL_CMD) {
       if (!quoted) return;
 
       const target = {
@@ -90,11 +92,19 @@ async function start() {
       if (!hasImage && !hasVideo) return;
 
       try {
-        const buffer = await downloadMediaMessage(target, 'buffer', {}, { logger: sock.logger });
+        let buffer = await downloadMediaMessage(target, 'buffer', {}, { logger: sock.logger });
+        let type = hasVideo ? StickerTypes.CROPPED : StickerTypes.FULL;
+        if (command === STICKER_FULL_CMD && hasImage) {
+          const img = await Jimp.read(buffer);
+          img.resize(1024, 1024);
+          buffer = await img.getBufferAsync(Jimp.MIME_JPEG);
+          type = StickerTypes.FULL;
+        }
+
         const sticker = new Sticker(buffer, {
           pack: 'devlima',
           author: 'by devlima',
-          type: hasVideo ? StickerTypes.CROPPED : StickerTypes.FULL
+          type
         });
         await sock.sendMessage(msg.key.remoteJid, await sticker.toMessage(), { quoted: msg });
       } catch (err) {
