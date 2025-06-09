@@ -47,39 +47,31 @@ async function start() {
   sock.ev.on('messages.upsert', async ({ messages, type }) => {
     if (type !== 'notify') return;
     const msg = messages[0];
-    if (!msg.message || msg.key.fromMe) return;
+    if (!msg.message) return;
     if (connectedAt && msg.messageTimestamp * 1000 < connectedAt) return;
 
     const text = (msg.message.conversation ||
       msg.message.extendedTextMessage?.text ||
-      msg.message.imageMessage?.caption ||
-      msg.message.videoMessage?.caption ||
       '').trim();
 
     if (!text.startsWith(PREFIX + STICKER_CMD)) return;
 
-    let target = msg;
-    let hasImage = !!msg.message.imageMessage;
-    let hasVideo = !!msg.message.videoMessage;
+    const ctx = msg.message.extendedTextMessage?.contextInfo;
+    const quoted = ctx?.quotedMessage;
+    if (!quoted) return;
 
-    if (!hasImage && !hasVideo) {
-      const quoted = msg.message.extendedTextMessage?.contextInfo?.quotedMessage;
-      if (quoted?.imageMessage || quoted?.videoMessage) {
-        const ctx = msg.message.extendedTextMessage.contextInfo;
-        target = {
-          key: {
-            remoteJid: msg.key.remoteJid,
-            id: ctx.stanzaId,
-            fromMe: false
-          },
-          message: quoted
-        };
-        hasImage = !!quoted.imageMessage;
-        hasVideo = !!quoted.videoMessage;
-      } else {
-        return;
-      }
-    }
+    const target = {
+      key: {
+        remoteJid: msg.key.remoteJid,
+        id: ctx.stanzaId,
+        fromMe: ctx.participant === sock.user.id
+      },
+      message: quoted
+    };
+
+    const hasImage = !!quoted.imageMessage;
+    const hasVideo = !!quoted.videoMessage;
+    if (!hasImage && !hasVideo) return;
 
     try {
       const buffer = await downloadMediaMessage(target, 'buffer', {}, { logger: sock.logger });
