@@ -133,8 +133,19 @@ async function start() {
       const total = (os.totalmem() / 1024 / 1024 / 1024).toFixed(2);
       const free = (os.freemem() / 1024 / 1024 / 1024).toFixed(2);
       const board = await si.baseboard();
-      const textMsg = `Hora: ${now}\nCPU: ${cpu}\nRAM livre/total: ${free}/${total} GB\nPlaca-mae: ${board.manufacturer} ${board.model}`;
-      await sock.sendMessage(msg.key.remoteJid, { text: textMsg }, { quoted: msg });
+      const info = [
+        `Hora: ${now}`,
+        `CPU: ${cpu}`,
+        `RAM livre/total: ${free}/${total} GB`,
+        `Placa-mae: ${board.manufacturer} ${board.model}`,
+        '',
+        'Comandos:',
+        `/${STICKER_CMD} - cria figurinha com a imagem ou video marcado`,
+        `/${STICKER_FULL_CMD} - figurinha quadrada esticada`,
+        `/${YT_CMD} <busca ou link> - baixa audio do YouTube`,
+        `/${MENU_CMD} - exibe estas informacoes`
+      ].join('\n');
+      await sock.sendMessage(msg.key.remoteJid, { text: info }, { quoted: msg });
     }
 });
 }

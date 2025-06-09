@@ -7,7 +7,7 @@ Este repositório contém um pequeno bot de WhatsApp que converte imagens e víd
 - Converte imagens em figurinhas respondendo com `/fig` à mensagem que contém a mídia.
 - Converte vídeos curtos (até 10 segundos) em figurinhas animadas da mesma forma.
 - Baixa o áudio de vídeos do YouTube usando o comando `/yt`.
-- Mostra informações do servidor com `/menu`.
+- Mostra informações do servidor com `/menu`, incluindo uma lista de comandos.
 - Cria figurinhas quadradas esticadas com `/figfull`.
 
 ## Requisitos
@@ -42,5 +42,5 @@ O comando `/yt` envia o áudio do primeiro resultado do YouTube ou do link infor
 O download do áudio é feito por um script Python que utiliza o `yt-dlp`.
 Se a conexão cair, o bot tenta se reconectar automaticamente.
 Caso ocorra algum erro ao baixar o áudio, o bot envia o arquivo `yt_error.log` com mais detalhes.
-Use `/menu` para ver o horário atual e informações de CPU, RAM e placa‑mãe do servidor.
+Use `/menu` para ver o horário atual, informações de CPU, RAM e placa‑mãe do servidor e a lista de comandos disponíveis.
 
