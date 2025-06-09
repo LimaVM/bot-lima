@@ -1,13 +1,13 @@
-import makeWASocket, {
+import baileys from '@whiskeysockets/baileys';
+const {
+  makeWASocket,
   useMultiFileAuthState,
   fetchLatestBaileysVersion,
-  downloadMediaMessage,
-  makeInMemoryStore
-} from '@whiskeysockets/baileys';
+  downloadMediaMessage
+} = baileys;
 import Pino from 'pino';
 import { Sticker, StickerTypes } from 'wa-sticker-formatter';
 
-const store = makeInMemoryStore({ logger: Pino().child({ level: 'silent', stream: 'store' }) });
 
 const PREFIX = '/';
 const STICKER_CMD = 'fig';
@@ -23,7 +23,6 @@ async function start() {
     auth: state
   });
 
-  store.bind(sock.ev);
   sock.ev.on('creds.update', saveCreds);
 
   sock.ev.on('messages.upsert', async ({ messages }) => {
