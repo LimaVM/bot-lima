@@ -19,11 +19,14 @@ out_dir = tempfile.gettempdir()
 filename = f"yt_{uuid.uuid4().hex}.%(ext)s"
 output = os.path.join(out_dir, filename)
 
+cookies_path = os.path.join(os.path.dirname(__file__), "cookies.txt")
+
 ydl_opts = {
     "format": "bestaudio/best",
     "outtmpl": output,
     "quiet": True,
     "noplaylist": True,
+    "cookies": cookies_path,
     "postprocessors": [{
         "key": "FFmpegExtractAudio",
         "preferredcodec": "mp3",
