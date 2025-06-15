@@ -10,11 +10,15 @@ import qrcode from 'qrcode-terminal';
 import Pino from 'pino';
 import { Sticker, StickerTypes } from 'wa-sticker-formatter';
 import Jimp from 'jimp';
-import { execFile } from 'child_process';
 import fs from 'fs';
 import os from 'os';
+import path from 'path';
 import si from 'systeminformation';
-import util from 'util';
+import ytdl from 'ytdl-core';
+import yts from 'yt-search';
+import ffmpeg from 'fluent-ffmpeg';
+import ffmpegPath from 'ffmpeg-static';
+import { randomBytes } from 'crypto';
 
 
 const PREFIX = '/';
@@ -107,13 +111,45 @@ async function start() {
       }
     } else if (command === YT_CMD && args) {
       try {
-        const { stdout } = await util.promisify(execFile)('python3', ['yt_downloader.py', args]);
-        const result = JSON.parse(stdout.trim());
-        if (result.error) throw new Error(result.error);
-        await sock.sendMessage(msg.key.remoteJid, { text: `Baixando: ${result.title}` }, { quoted: msg });
-        const audioBuffer = fs.readFileSync(result.path);
+        const cookiesPath = path.join(process.cwd(), 'cookies.txt');
+        let cookies = '';
+        try { cookies = fs.readFileSync(cookiesPath, 'utf8'); } catch {}
+
+        let info, url;
+        if (args.startsWith('http')) {
+          url = args;
+          const vinfo = await ytdl.getInfo(url, {
+            requestOptions: cookies ? { headers: { cookie: cookies } } : {}
+          });
+          info = { title: vinfo.videoDetails.title };
+        } else {
+          const search = await yts(args);
+          if (!search.videos.length) throw new Error('Nenhum resultado encontrado');
+          info = search.videos[0];
+          url = info.url;
+        }
+
+        await sock.sendMessage(msg.key.remoteJid, { text: `Baixando: ${info.title}` }, { quoted: msg });
+
+        const outPath = path.join(os.tmpdir(), `yt_${randomBytes(8).toString('hex')}.mp3`);
+        await new Promise((resolve, reject) => {
+          ffmpeg(
+            ytdl(url, {
+              quality: 'highestaudio',
+              requestOptions: cookies ? { headers: { cookie: cookies } } : {}
+            })
+          )
+            .setFfmpegPath(ffmpegPath)
+            .audioBitrate(192)
+            .format('mp3')
+            .save(outPath)
+            .on('end', resolve)
+            .on('error', reject);
+        });
+
+        const audioBuffer = fs.readFileSync(outPath);
         await sock.sendMessage(msg.key.remoteJid, { audio: audioBuffer, mimetype: 'audio/mpeg' }, { quoted: msg });
-        fs.unlinkSync(result.path);
+        fs.unlinkSync(outPath);
       } catch (err) {
         console.error('Erro ao baixar audio:', err);
         const log = `Erro ao baixar audio:\n${err.stack}`;
