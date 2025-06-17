@@ -1,18 +1,21 @@
 # 🤖 Bot de Figurinhas WhatsApp com Baileys
 
-Este é um bot de WhatsApp usando a biblioteca Baileys. Ele transforma imagens e vídeos curtos enviados no WhatsApp em figurinhas (stickers).
+Este repositório contém um pequeno bot de WhatsApp que converte imagens e vídeos curtos em figurinhas utilizando a biblioteca Baileys.
 
 ## Funcionalidades
 
-- Cria figurinhas a partir de imagens.
-- Cria figurinhas animadas a partir de vídeos curtos (até 10 segundos).
-- Responde automaticamente quando recebe mídia.
+- Converte imagens em figurinhas respondendo com `/fig` à mensagem que contém a mídia.
+- Converte vídeos curtos (até 10 segundos) em figurinhas animadas da mesma forma.
+- Baixa o áudio de vídeos do YouTube usando o comando `/yt`.
+- Mostra informações do servidor com `/menu`, incluindo uma lista de comandos.
+- Cria figurinhas quadradas esticadas com `/figfull`.
 
 ## Requisitos
 
-- Node.js 18 ou superior
-- ffmpeg instalado na máquina
-- Conta de WhatsApp para conexão
+ - Node.js 18 ou superior
+ - Conta de WhatsApp para conexão
+ - O binário do ffmpeg já é fornecido pela dependência `ffmpeg-static`
+ - (Opcional) um arquivo `cookies.txt` na pasta do bot para downloads autenticados
 
 ## Instalação
 
@@ -20,3 +23,24 @@ Este é um bot de WhatsApp usando a biblioteca Baileys. Ele transforma imagens e
 git clone https://github.com/seu-usuario/bot-figurinhas.git
 cd bot-figurinhas
 npm install
+```
+
+## Uso
+
+Inicie o bot executando:
+
+```bash
+npm start
+```
+
+Um QR Code será exibido no terminal. Escaneie com o WhatsApp para efetuar a conexão.
+O bot processa apenas mensagens novas, inclusive em grupos. Qualquer usuário pode usar os comandos.
+Para criar a figurinha normal, envie `/fig` respondendo à mensagem que contém a imagem ou o vídeo desejado.
+Se preferir uma versão quadrada esticada, responda com `/figfull`.
+As figurinhas são geradas com o pacote `devlima` e autor `by devlima` e o bot não envia nenhuma mensagem além da própria figurinha.
+ O comando `/yt` envia o áudio do primeiro resultado do YouTube ou do link informado. Antes do envio ele avisa qual vídeo será baixado.
+ O download do áudio é realizado diretamente em Node.js utilizando `ytdl-core` e `ffmpeg`. Caso exista um arquivo `cookies.txt`, ele é usado automaticamente.
+Se a conexão cair, o bot tenta se reconectar automaticamente.
+Caso ocorra algum erro ao baixar o áudio, o bot envia o arquivo `yt_error.log` com mais detalhes.
+Use `/menu` para ver o horário atual, informações de CPU, RAM e placa‑mãe do servidor e a lista de comandos disponíveis.
+
